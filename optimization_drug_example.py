@@ -1,7 +1,21 @@
 # Slide #1 answers: 
 ## Optimization to find the optimal drug dose: 
-    # 1. "Increasing lambda sign places a higher penalty on toxicity. Qualitatively, this causes the Net Effect peak to shift to a lower dosage and results in a lower maximum efficacy. Conversely, decreasing lambda allows for a higher dosage and higher efficacy because the model is more tolerant of toxicity."
+    # 1. Increasing the lambda sign represents a higher penalty (negative emphasis) on toxicity. Qualitatively, this causes the Net Effect peak to shift to a lower dosage and results in a lower maximum efficacy; this occurs because patient saftey is prioritized over maximum efficacy, as seen with the lower dosages that acheive lower maximum height values (lower efficacy and success of the drug). 
+    # Conversely, decreasing lambda allows for a higher dosage and higher efficacy because the model is more tolerant of toxicity, which can lead to better outcomes for patients who can tolerate higher toxicity levels because the height of the graph is higher and the peak is shifted to the right, indicating a higher optimal dosage.
+    
+    # 2. Newton's method converges faster than the method of steepest ascent as seen with how both methods respectively converge to the value in 757 iterations and 5 iterations. This is because Newton's method uses second-order information (the curvature of the function) to make more informed updates, while the method of steepest ascent only uses first-order information (the gradient), which can lead to slower convergence, especially near the optimal point where the gradient becomes small.
 
+    # 3. Changing the number of itterations can greatly affect the optimal value that the functions converge to. 
+        # For instance, if we changed the number of itterations from 1000 to 100, 
+        # the method of steepest ascent would converge to the optimal Escitalopram Dose of 3.95mg with 1000 itterations, but 
+        # with only 100 itterations, it would converge to a suboptimal dose of 2.54 mg, which is much lower than the optimal dose previously predicted with the larger itterative limit of 1000. 
+            # Percent change wise, it had a 35.7% decrease in the optimal dose, which is a significant change that could have major implications for patient outcomes if this suboptimal dose were used in practice. 
+
+# Slide #2 answers:
+##  Continuation of the prevous slide of questions and answers: 
+    # 1.  The combined function is plotted within the code 
+    # 2.  The combined drugs optimal dosage is 4.58 mg with a net optimal effect of 174.93% with the method of steepest ascent; 
+         # Futhermore, with newton's method, the optimal dosage is 5.26 mg with a net 
 
 
 # drug efficacy optimization example for BME 2315
@@ -14,22 +28,28 @@ import matplotlib.pyplot as plt
 
 #%% define drug models
 
-# define toxicity levels for each drug (lambda)
-metformin_lambda = 3  # 0.2
+# define toxicity levels for each drug (lambda values λ's) -- these are the weights that determine how much we penalize toxicity in our optimization for the diffrent drugs
 
-lisinopril_lambda = 4  # 0.8
+metformin_lambda = 1.5  # 0.2
 
-escitalopram_lambda = 1 # 0.3
+lisinopril_lambda = 1.2  # 0.8
 
-def metformin(x):   # mild toxicity, moderate efficacy
-    efficacy = 0.8 * np.exp(-0.1*(x-5)**2)
+escitalopram_lambda = 0.9 # 0.3
+
+# Efficacy (E) = how much the drug helps the patient; 
+# Toxicity (T) = how much the drug harms the patient. 
+# Lambda (λ) = a weighting factor that determines how much we penalize toxicity in our optimization. 
+#   A higher λ means we care more about minimizing toxicity, while a lower λ means we are more tolerant of toxicity in pursuit of efficacy.
+
+def metformin(x):   # mild toxicity, moderate efficacy; where x is the dosage in mg
+    efficacy = 0.8 * np.exp(-0.1*(x-5)**2) #
     toxicity = 0.2 * x**2 / 100
     return efficacy - metformin_lambda * toxicity
-def lisinopril(x):  # strong efficacy, higher toxicity
+def lisinopril(x):  # strong efficacy, higher toxicity; where x is the dosage in mg
     efficacy = np.exp(-0.1*(x-7)**2)
     toxicity = 0.3 * x**2 / 80
     return efficacy - lisinopril_lambda * toxicity
-def escitalopram(x):  # weaker efficacy, low toxicity
+def escitalopram(x):  # weaker efficacy, low toxicity; where x is the dosage in mg
     efficacy = 0.6 * np.exp(-0.1*(x-4)**2)
     toxicity = 0.1 * x**2 / 120
     return efficacy - escitalopram_lambda * toxicity
@@ -97,6 +117,11 @@ opt_dose_escitalopram, opt_effect_escitalopram = steepest_ascent(escitalopram, x
 print(f"Steepest Ascent Method - Optimal Escitalopram Dose: {opt_dose_escitalopram:.2f} mg")
 print(f"Steepest Ascent Method - Optimal Escitalopram Effect: {opt_effect_escitalopram*100:.2f}%")
 
+# combined drugs -- code helped by VScode Copilot
+opt_dose_combined, opt_effect_combined = steepest_ascent(combined_drugs, x0=1.0)
+print(f"Steepest Ascent Method - Optimal Combined Drug Dose: {opt_dose_combined:.2f} mg")
+print(f"Steepest Ascent Method - Optimal Combined Drug Effect: {opt_effect_combined*100:.2f}%")
+
 # %% Newton's method
 
 # requires second derivative
@@ -137,3 +162,9 @@ print(f"Newton's Method - Optimal Lisinopril Effect: {opt_effect_lisinopril_nm*1
 opt_dose_escitalopram_nm, opt_effect_escitalopram_nm = newtons_method(escitalopram, x0=1.0)
 print(f"Newton's Method - Optimal Escitalopram Dose: {opt_dose_escitalopram_nm:.2f} mg")
 print(f"Newton's Method - Optimal Escitalopram Effect: {opt_effect_escitalopram_nm*100:.2f}%")
+
+# combined drugs
+opt_dose_combined_nm, opt_effect_combined_nm = newtons_method(combined_drugs, x0=1.0)
+print(f"Newton's Method - Optimal Combined Drug Dose: {opt_dose_combined_nm:.2f} mg")
+print(f"Newton's Method - Optimal Combined Drug Effect: {opt_effect_combined_nm*100:.2f}%")
+

@@ -14,9 +14,19 @@
 # Slide #2 answers:
 ##  Continuation of the prevous slide of questions and answers: 
     # 1.  The combined function is plotted within the code 
-    # 2.  The combined drugs optimal dosage is 4.58 mg with a net optimal effect of 174.93% with the method of steepest ascent; 
-         # Futhermore, with newton's method, the optimal dosage is 5.26 mg with a net 
+    # 2.  The combined drugs optimal dosage is 5.26 mg with a net optimal effect of 181.70% with the method of steepest ascent; 
+        # Futhermore, with newton's method, the optimal dosage is 5.26 mg with also a net optimal effect of 181.70%.
+        # Both methods converge to the same optimal dosage and effect for the combined drugs, which suggests that both optimization techniques are effective in finding the optimal solution for this problem, and that this is the true optimal dosage and effect for the combined drugs given the defined models and parameters.
 
+    # 3. Made the function below to find the lambda value for metformin that would give us an optimal dose of 5.26 mg, which is the optimal dose we found for the combined drugs. By adjusting the lambda value for metformin, we can see how it affects the optimal dose and find the lambda that allows us to achieve a similar optimal dose to that of the combined drugs, which can provide insights into how we might optimize metformin dosing in a clinical setting while considering its toxicity.
+        # it is the last part of the code 
+
+
+# Author: ChatGPT-4 and Google Gemini
+# Source: https://chat.openai.com/ and https://gemini.google.com/
+    # I want to come forth and acknowlege that I did use Generative AI with some of my understanding for the code and for some of the implenentation of the code. For instance, when working to fix some of the code errors present when I was tyring to generate the combined drug function's plot graphically. 
+    # Furthermore, when makign the funtion to optimize the amount of lambda for metformin to acheive the optimal dose of 5.26 mg, I used Google Gemini to help me with the code implementation and understanding of how to approach this problem because I was struggling on how to set up the code to loop thourgh, test, and pick the specific lambda value. 
+    # Lastly, I also used Google Gemini to help me understand the Benefit = Effiacy - Lambda * Toxicity equation, how to interpret it with the changes in the graphs, and what it means in a clinical setting in terms of how we might optimize drug dosing while considering toxicity. The writing and code implemmentation is my own, but I needed AI to help me understand the concepts and how to implement them best. 
 
 # drug efficacy optimization example for BME 2315
 # made by Lavie, fall 2025
@@ -168,3 +178,49 @@ opt_dose_combined_nm, opt_effect_combined_nm = newtons_method(combined_drugs, x0
 print(f"Newton's Method - Optimal Combined Drug Dose: {opt_dose_combined_nm:.2f} mg")
 print(f"Newton's Method - Optimal Combined Drug Effect: {opt_effect_combined_nm*100:.2f}%")
 
+
+
+# Question 3 of slide 2: Asked to choose one drug and find its lambda value to acheive the optimal dose value of 5.26 mg seen with the combined drugs, but we are only specifiying it to one drug (we will choose metformin for this example).
+
+# 1. Setting the target to match the combined drugs optimal dosage of 5.26 mg, we will adjust the lambda value for metformin to find the optimal dose that matches this target.
+target_dose = 5.26  # This is the 'Combined' peak we want to match
+
+# 2. Creating a list of lambdas to test for the target dosage optimal for chosen drug metaformin within the optimal mix of combined drugs
+# We will test 50 different 'penalty' levels from 0.1 to 2.0 -- range set of lambda values to test, from very low penalty (0.1) to high penalty (2.0), with 50 evenly spaced values in between. This allows us to see how different levels of toxicity penalty affect the optimal dosage and find the lambda that best matches our target dose.
+    # the range of lambda values chosen are only from 0.1 to 2.0 to ensrure that we don't make the drug too toxic (ex. 100000) or too non-toxic (ex. 0.00001) because these extreme values would not be realistic in a clinical setting and would likely lead to either an unacceptably high toxicity or an unrealistically low toxicity that doesn't reflect real-world drug behavior. By testing a range of lambda values within this more reasonable range, we can find a balance that allows us to achieve the desired optimal dose while still considering patient safety.
+    # Furthermore, we picked to go with values that were around 0-15mg of drugs with the range sets going from 0.1 to 2.0 to better represent the scenario of drug dosing seen with the graphs and to accuretly and more prescisely predict where the optimal for the drug (metformin) would be present along with the combined drugs optimal dosage.
+    # The choice of 50 values provides a good balance between granularity and computational efficiency, allowing us to find a lambda value that closely matches the target dose without requiring an excessive number of calculations.
+
+test_lambdas = np.linspace(0.1, 2.0, 50)
+
+# Variables to store the best matching lambda and defining the smallest error allowed
+best_l = 0 # -- this will store the lambda value that gives us the optimal dose closest to our target dose of 5.26 mg for metformin
+smallest_error = 100 # -- this will store the smallest error (the absolute difference between the optimal dose for metformin and the target dose) that we have found so far. We initialize it to a large number (100) to ensure that any actual error we calculate will be smaller than this initial value, allowing us to update it with the first lambda we test and then continue to find smaller errors as we test more lambdas.
+    # the smallest error will change and get smaller as we test diffrent lambda values. 
+
+# 3. Looping though each Lambda value and finding the optimal dose for metformin with that specific lambda, then calculating how far away that optimal dose is from our target dose of 5.26 mg, and if it's the closest we've been so far, we save that lambda as our best lambda. This process allows us to find the lambda value that gives us an optimal dose for metformin that is closest to the target dose of 5.26 mg, which is the optimal dose we found for the combined drugs. 
+# By doing this, we can see how adjusting the toxicity penalty (lambda) for metformin can help us achieve a similar optimal dose to that of the combined drugs, which can provide insights into how we might optimize metformin dosing in a clinical setting while considering its toxicity.
+for l in test_lambdas:
+    # A. Define Metformin using the current lambda (l)
+    def temp_metformin(x):
+        eff = 0.8 * np.exp(-0.1 * (x - 5)**2) # same function as before
+        tox = 0.2 * x**2 / 100
+        return eff - (l * tox)
+    
+    # B. Find where the peak is for this specific lambda
+    # We use Newton's Method because it's the fastest 'climber'
+    current_peak_dose, _ = newtons_method(temp_metformin, x0=5.0) 
+        # current_peak_dose will give us the optimal dose for metformin with the current lambda (l) that we are testing. We start our search at x0=5.0 because we know from our previous analysis that the optimal dose for metformin is around 5 mg, so starting our search near this value will help us find the peak more efficiently.
+        # _ is used to ignore the second value returned by newtons_method, which is the optimal effect at that dose, because we are only interested in the optimal dose for this part of the analysis.
+    
+    # C. Calculate how far away we are from the target (5.26)
+    error = abs(current_peak_dose - target_dose)
+
+    
+    # D. If this is the closest we've been so far, save it!
+    if error < smallest_error:
+        smallest_error = error # update the smallest error to be the error we just calculated, because it's smaller than the previous smallest error we had, getting us closer to our target dose of combined drugs mix of 5.26 mg, with metformin retaining some of that optimized weight that is more accurate to its porportion to the combined drugs mix weight of 5.26 mg.
+        best_l = l
+
+print(f"To match the combined dose of {target_dose}mg...")
+print(f"Metformin needs a Lambda of: {best_l:.4f}")

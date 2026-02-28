@@ -11,7 +11,14 @@ import matplotlib.pyplot as plt
     # Parsing the date column was necessary becasue it allows us to work with the date information better, especially since without parsing, the date would just be treated as a string. 
     # By parsing the date, pandas recognizes the data value as a datetime object, which allows us to perfom date-based operations, such as plotting the data over time, which is what we are needing to do in this analysis: End goal of Day vs. Active Infections plot. 
 
-data = pd.read_csv('Module-2-Epidemics-SIR-Modeling/Data/mystery_virus_daily_active_counts_RELEASE#1.csv', parse_dates=['date'], header=0, index_col=None)
+# Based on the error that I said earlier: 
+    # this is the path to the file on my computer: 'C:/Users/kidus/OneDrive/Desktop/Computational BME/Module 02/Module-2-Epidemics-SIR-Modeling/Data/mystery_virus_daily_active_counts_RELEASE#1.csv'
+    # This is how the path is saved within Makayla's original start of the code: 'Module-2-Epidemics-SIR-Modeling/Data/mystery_virus_daily_active_counts_RELEASE#1.csv'
+
+data = pd.read_csv('C:/Users/kidus/OneDrive/Desktop/Computational BME/Module 02/Module-2-Epidemics-SIR-Modeling/Data/mystery_virus_daily_active_counts_RELEASE#1.csv', parse_dates=['date'], header=0, index_col=None)
+
+# Makayla's original code for loading the data:
+# data = pd.read_csv('Module-2-Epidemics-SIR-Modeling/Data/mystery_virus_daily_active_counts_RELEASE#1.csv', parse_dates=['date'], header=0, index_col=None)
 
 # just a note for error that needs to be addressed: 
     # Kidus -- I encountered an error when trying to load the data and realized that the path to the file is inputed incorreclty within my computer. Locally, within my computer, it is located on my one drive folder, but in order to not cause any technical issues, I am going to address the issue later on after break. 

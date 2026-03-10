@@ -137,7 +137,7 @@ for b in beta_range:
                 best_sse = current_sse
                 best_params = (b, s, g) # storing the best parameters (beta, sigma, gamma) in a tuple for easy access later on.
 
-# 6. Returning the best paramters (beta, sigma, gamma) with the lowest SSE error. 
+# Returning the best paramters (beta, sigma, gamma) with the lowest SSE error. 
 # These three numbers are the "Biological Profile" of the mystery virus.
 best_beta, best_sigma, best_gamma = best_params
 
@@ -179,8 +179,45 @@ plt.show()
 # I used the np.max function to find the maximum value of active cases, and the np.argmax function to find the index of that maximum value, which corresponds to the day of the peak.
 # Citation: https://gemini.google.com/app
 
+# I_p is the array of predicted active cases over time from our SEIR model. We want to find the maximum value in this array, which represents the peak number of active cases during the epidemic spread.
+# This will help us understand the approximate severity of outbreak at its worst point, a value derived from here will be utilized to calculate relative error. 
+
 peak_val = np.max(I_p) # corresponds to the maximum number of active cases predicted by our model, which represents the peak of the epidemic spread. This value indicates how many active cases we can expect at the height of the outbreak according to our SEIR model with the best-fitting parameters.
-peak_day = np.argmax(I_p) # corresponed with the index of the maximum value in I_p, which gives us the day number of the peak.
+    # peak_val is also the appromimate number of max active cases we can expect at the height of the outbreak according to our SEIR model with the best-fitting parameters.
+    # will use this approximate value to compare to the real data and calculate the relative error in the next step (in class activity 03/10/2026).
+peak_day = np.argmax(I_p) # corresponed with the index of the maximum value in I_p, which gives us the day number of the peak. 
 
 print(f"The epidemic is predicted to peak on Day {peak_day} with {int(peak_val)} active cases.")
 
+#%% 
+
+# in class activity: 03/10/2026 -- Find the true % relative error between the data and your model prediction at the peak day (compare approximate data value peak_val to the real/true data value on the peak day from the csv file mystery_virus_daily_active_counts_RELEASE#3.csv).
+# Load the true data from the CSV file
+
+# Load the True Data -- Ensure the column names match CSV (e.g., 'active reported daily cases' and 'day')
+true_data = pd.read_csv("mystery_virus_daily_active_counts_RELEASE#3.csv")
+
+# 3. Find the Actual Peak in the Real Data
+# We look for the maximum value in the actual data column
+actual_peak_val = true_data['active reported daily cases'].max() # gives the true maximum number of active cases reported in the real data from data release #3.
+actual_peak_day_index = true_data['active reported daily cases'].idxmax() # gives the index of the maximum value in the 'active reported daily cases' column, which corresponds to the day of the peak in the real data.
+actual_peak_day = true_data.iloc[actual_peak_day_index]['day']
+
+# 4. Calculate Relative Errors
+# Relative Error for Peak Magnitude (Value)
+val_relative_error = abs((actual_peak_val - peak_val) / actual_peak_val) * 100
+
+# Relative Error for Peak Timing (Day)
+# Using the same formula: (True - Approx) / True
+day_relative_error = abs((actual_peak_day - peak_day) / actual_peak_day) * 100
+
+# 5. Output Results
+print(f"--- Model Predictions ---")
+print(f"Predicted Peak: Day {peak_day} with {int(peak_val)} cases.")
+
+print(f"\n--- True Data Observations ---")
+print(f"Actual Peak: Day {actual_peak_day} with {actual_peak_val} cases.")
+
+print(f"\n--- Error Metrics ---")
+print(f"Relative Error (Cases): {val_relative_error:.2f}%")
+print(f"Relative Error (Timing): {day_relative_error:.2f}%")

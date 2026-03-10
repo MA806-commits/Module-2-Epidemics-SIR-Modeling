@@ -7,7 +7,7 @@ import scipy # Scipy is another advance math library that will be useful for cur
 from scipy.optimize import curve_fit # this is the function we will be using to fit our exponential growth curve to the data.
 
 # Loading the data from Release #2 -- loading the data into a pandas dataframe.
-data = pd.read_csv('C:/Users/kidus/OneDrive/Desktop/Computational BME/Module 02/Module-2-Epidemics-SIR-Modeling/Data/mystery_virus_daily_active_counts_RELEASE#1.csv')
+data = pd.read_csv('C:\\Users\\kidus\\OneDrive\\Desktop\\Computational BME\\Module 02\\Module-2-Epidemics-SIR-Modeling\\Data\\mystery_virus_daily_active_counts_RELEASE#2.csv')
 
 # Why initialize 'days' and 'cases' as separate variables?
 # 1. Accessibility: It is faster to type 'days' than 'data["day"]' repeatedly.
@@ -195,7 +195,7 @@ print(f"The epidemic is predicted to peak on Day {peak_day} with {int(peak_val)}
 # Load the true data from the CSV file
 
 # Load the True Data -- Ensure the column names match CSV (e.g., 'active reported daily cases' and 'day')
-true_data = pd.read_csv("mystery_virus_daily_active_counts_RELEASE#3.csv")
+true_data = pd.read_csv("C:\\Users\\kidus\\OneDrive\\Desktop\\Computational BME\\Module 02\\Module-2-Epidemics-SIR-Modeling\\Data\\mystery_virus_daily_active_counts_RELEASE#3.csv")
 
 # 3. Find the Actual Peak in the Real Data
 # We look for the maximum value in the actual data column
@@ -219,5 +219,5 @@ print(f"\n--- True Data Observations ---")
 print(f"Actual Peak: Day {actual_peak_day} with {actual_peak_val} cases.")
 
 print(f"\n--- Error Metrics ---")
-print(f"Relative Error (Cases): {val_relative_error:.2f}%")
-print(f"Relative Error (Timing): {day_relative_error:.2f}%")
+print(f"Relative Error (Cases): {val_relative_error:.2f}%") # relative error in y axis (number of cases)
+print(f"Relative Error (Timing): {day_relative_error:.2f}%") # relative error in x axis (day of the peak)

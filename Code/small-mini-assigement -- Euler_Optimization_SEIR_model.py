@@ -80,46 +80,107 @@ def run_SEIR_euler(beta, sigma, gamma, S0, E0, I0, R0, timepoints, N):
 # This is the optimization section. We will be trying to find the best parameters (beta, sigma, gamma) that make our SEIR model's predicted infections (I) match the real data (cases) as closely as possible.
 # We don't know the real beta/sigma/gamma, so we try a bunch to see what fits best.
 
-N = 100000 # Total population (constant)
-S0, E0, I0, R0 = N-5, 0, 5, 0 # Start with 5 infected people, 0 exposed, 0 recovered.
-best_sse = float('inf') # We start with "infinite" error so the first attempt is always better.
-best_params = (0, 0, 0) # Placeholder for our winners.
+N = 100000 # Total population (constant) -- Start with 5 infected people (I0), 0 exposed (E0), 0 recovered (R0), and suseptible population is N-5 (S0).
+S0 = N-5 
+E0 = 0 
+I0 = 5 
+R0 = 0 
 
-# We define ranges based on our earlier R0 calculation (around 0.12).
-beta_opts = np.linspace(0.1, 1.0, 20)  # Try 20 values between 0.1 and 1.0
-sigma_opts = np.linspace(0.1, 0.5, 10) # Try 10 values for incubation
-gamma_opts = np.linspace(0.05, 0.2, 10) # Try 10 values for recovery
+# 'best_sse' starts at infinity. Our goal is to find a beta/sigma/gamma combo that brings this number as close to zero as possible.
+# Author note: Had trouble on what to set the initial value of best_sse to, but after looking at the code and understanding that we are trying to minimize the error (SSE), it made sense to set it to infinity so that any calculated SSE would be smaller than this initial value.
+# Utilized Generative AI (Gemini) to understand the logic of setting the initial value of best_sse to infinity and how to implement the grid search for finding the best parameters.
+# Citation: https://gemini.google.com/app
 
-# The "Triple Loop": This tests every single combination of the parameters above.
-for b in beta_opts:
-    for s in sigma_opts:
-        for g in gamma_opts:
-            # Run the Euler engine using the current "guess" parameters.
-            S, E, I, R = run_SEIR_euler(b, s, g, S0, E0, I0, R0, days, N)
+best_sse = float('inf') 
+best_params = (0, 0, 0) # This will hold our winning settings.
+sse_history = []        # As per pseudocode, we track every error calculation.
+
+# DEFINE THE SEARCH RANGES (Using your R0 = 0.12 as a guide -- tip from class and R0 value of 0.12 was what we estimated from previous assigment)
+# Logic: Since R0 = beta / gamma, and your R0 is roughly 0.12, the true transmission rate (beta) should be about 12% of the recovery rate (gamma).
+# We use this "Compass" to set ranges that are realistic, rather than searching through random, massive numbers.
+
+# Generative AI (Gemini) helped me understand how to set the search ranges for beta, sigma, and gamma based on our estimated R0 value and the relationships between these parameters.
+# Needed to also understand what the .linspace function does and how to use it to create a range of values for each parameter. 
+    # .linspace creates an array of evenly spaced values between a specified start and end point. In this case, we are creating 10 values for each parameter (beta, sigma, gamma) within the defined ranges that are guided by our estimated R0 value and the biological plausibility of the parameters.
+    # its parameters are as follows: the start value, the end value, and the number of values to generate. For example, np.linspace(0.01, 0.2, 10) generates 10 values between 0.01 and 0.2 for beta.
+# Citation: https://gemini.google.com/app
+
+beta_range = np.linspace(0.01, 0.2, 10)  # Guided by R0: looking for small beta.
+sigma_range = np.linspace(0.1, 0.5, 10)  # Searching for the incubation speed.
+gamma_range = np.linspace(0.05, 0.5, 10) # Searching for the recovery speed.
+
+# Grid search: We will test every combination of beta, sigma, and gamma within our defined ranges to see which one fits the data best.
+# We test 1,000 different combinations of biological parameters.
+for b in beta_range:
+    for s in sigma_range:
+        for g in gamma_range:
             
-            # SSE (Sum of Squared Errors): We subtract our model's 'I' from 
-            # the real 'cases' data, square it (to remove negatives), and sum it up.
-            sse = np.sum((I - cases)**2)
+            # Use the Euler function from 2c to draw a "Predicted" line.
+            # We use 'days' (from our CSV) as our x-axis.
+            S_m, E_m, I_m, R_m = run_SEIR_euler(b, s, g, S0, E0, I0, R0, days, N)
             
-            # If this guess has a lower error than our previous best, save it!
-            if sse < best_sse:
-                best_sse = sse
-                best_params = (b, s, g)
+            # 4. Calculate the error (SSE)-- We want to see how far off our model's predicted infections (I_m) are from the real data (cases).
+            # We subtract our predicted infections (I_m) from real cases (cases).
+            # We square it to make every error positive and penalize big misses.
+            current_sse = np.sum((cases - I_m)**2)
+                # Doccumentation: ** = power operator in python. 
+                # citation: https://softwareengineering.stackexchange.com/questions/131403/what-is-the-name-of-in-python
 
-# Extract the winning parameters.
+            
+            # Save error to the history list for tracking.
+            sse_history.append(current_sse)
+            
+            # 5. Deterimine the best fit (winner) -- If this is the best fit we've seen, we save the parameters and the error.
+            # If the current_sse is the smallest we've seen, it's our new "Best Fit."
+            # This combination of b, s, and g is the most biologically accurate.
+            if current_sse < best_sse:
+                best_sse = current_sse
+                best_params = (b, s, g) # storing the best parameters (beta, sigma, gamma) in a tuple for easy access later on.
+
+# 6. Returning the best paramters (beta, sigma, gamma) with the lowest SSE error. 
+# These three numbers are the "Biological Profile" of the mystery virus.
 best_beta, best_sigma, best_gamma = best_params
-print(f"Optimal parameters found: Beta={best_beta}, Sigma={best_sigma}, Gamma={best_gamma}")
 
-
+print(f"Grid Search Complete. Lowest SSE: {best_sse}")
+print(f"The best fit matches your R0 guidance with Beta={best_beta} and Gamma={best_gamma}")
 
 #%%
 # 2e. Plot the model-predicted infections over time compared to the data. This section should come from your python code after Data Release #2.
 
+# Choose a timeframe that captures the full "hill" of the infection
+# You can change this number (e.g., 100, 200, 300) until the plot looks right!
+total_prediction_days = 150 
+prediction_time = np.arange(0, total_prediction_days, 1) 
+    # Doccumentation purposes: 
+        # np.arange creates an array of values starting from the first parameter (0) up to but not including the second parameter (total_prediction_days), with a step size defined by the third parameter (1). In this case, it creates an array of integers from 0 to 149, which represents the days for our prediction timeline.
+        # This is important becasue we want to predict the number of active cases over a specific time frame that captures the full progression of the epidemic, including the rise and fall of active cases. 
+        # By adjusting total_prediction_days, we can ensure that our plot includes the entire "hill" of the infection curve, allowing us to visualize how well our model fits the observed data over time.
+        # Citation: https://gemini.google.com/app
+
+# Run the model with our 'best' settings from 2d
+S_p, E_p, I_p, R_p = run_SEIR_euler(best_beta, best_sigma, best_gamma, S0, E0, I0, R0, prediction_time, N)
+
+# --- 2e: Plotting ---
+plt.figure(figsize=(10, 6))
+plt.scatter(days, cases, color='black', label='Observed Data', zorder=5) # Real dots
+plt.plot(prediction_time, I_p, color='red', label='Model Prediction', linewidth=2) # Our line
+plt.title(f"Outbreak Projection Over {total_prediction_days} Days")
+plt.xlabel("Days")
+plt.ylabel("Active Cases")
+plt.legend()
+plt.show()
 
 
 
 #%%
 # 2f. Predict the day and amount of active cases at the peak of the epidemic spread. This section should come from your python code after Data Release #2.
+# To find the peak of the epidemic, we look for the maximum number of active cases (I_p) predicted by our model and the corresponding day.
+# I needed help from generative AI to spot the specific syntax for finding the maximum value and its corresponding index in the array of predicted active cases (I_p).
+# I used the np.max function to find the maximum value of active cases, and the np.argmax function to find the index of that maximum value, which corresponds to the day of the peak.
+# Citation: https://gemini.google.com/app
 
+peak_val = np.max(I_p) # corresponds to the maximum number of active cases predicted by our model, which represents the peak of the epidemic spread. This value indicates how many active cases we can expect at the height of the outbreak according to our SEIR model with the best-fitting parameters.
+peak_day = np.argmax(I_p) # corresponed with the index of the maximum value in I_p, which gives us the day number of the peak.
 
+print(f"The epidemic is predicted to peak on Day {peak_day} with {int(peak_val)} active cases.")
 

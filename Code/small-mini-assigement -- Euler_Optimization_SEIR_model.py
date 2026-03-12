@@ -80,8 +80,9 @@ def run_SEIR_euler(beta, sigma, gamma, S0, E0, I0, R0, timepoints, N):
 # This is the optimization section. We will be trying to find the best parameters (beta, sigma, gamma) that make our SEIR model's predicted infections (I) match the real data (cases) as closely as possible.
 # We don't know the real beta/sigma/gamma, so we try a bunch to see what fits best.
 
-N = 100000 # Total population (constant) -- Start with 5 infected people (I0), 0 exposed (E0), 0 recovered (R0), and suseptible population is N-5 (S0).
-S0 = N-5 
+N = 17000 # Total population (constant given from slides -- this is becasue the disease started at UVA within their 17,000 person population)) 
+    #-- Start with 5 infected people (I0), 0 exposed (E0), 0 recovered (R0), and suseptible population is N-5 (S0).
+S0 = N - 5 
 E0 = 0 
 I0 = 5 
 R0 = 0 
@@ -91,7 +92,7 @@ R0 = 0
 # Utilized Generative AI (Gemini) to understand the logic of setting the initial value of best_sse to infinity and how to implement the grid search for finding the best parameters.
 # Citation: https://gemini.google.com/app
 
-best_sse = float('inf') 
+best_sse = float('inf')  # possible error source??
 best_params = (0, 0, 0) # This will hold our winning settings.
 sse_history = []        # As per pseudocode, we track every error calculation.
 
@@ -105,9 +106,9 @@ sse_history = []        # As per pseudocode, we track every error calculation.
     # its parameters are as follows: the start value, the end value, and the number of values to generate. For example, np.linspace(0.01, 0.2, 10) generates 10 values between 0.01 and 0.2 for beta.
 # Citation: https://gemini.google.com/app
 
-beta_range = np.linspace(0.01, 0.2, 10)  # Guided by R0: looking for small beta.
-sigma_range = np.linspace(0.1, 0.5, 10)  # Searching for the incubation speed.
-gamma_range = np.linspace(0.05, 0.5, 10) # Searching for the recovery speed.
+beta_range = np.linspace(0.05, 0.15, 50)  # Guided by R0: looking for small beta. R0 = beta / gamma, so if R0 is 0.12 and we want to find a beta that is about 12% of gamma, we can set up a range for beta that is small, such as from 0.05 to 0.15, which allows us to explore values around our estimated R0 while keeping the search focused on biologically plausible parameters. We are also generating 50 values within this range to have a good resolution for our grid search.
+sigma_range = np.linspace(0.1, 0.3, 50)  # Searching for the incubation speed. This range is chosen based on typical values for the incubation period of infectious diseases, which can vary but often falls within a certain range. By setting sigma to vary between 0.1 and 0.3, we are exploring a range of incubation speeds that could be realistic for the mystery virus, allowing us to find the best fit for our model based on the observed data. We are also generating 50 values within this range to have a good resolution for our grid search.
+gamma_range = np.linspace(0.05, 0.5, 50) # Searching for the recovery speed.
 
 # Grid search: We will test every combination of beta, sigma, and gamma within our defined ranges to see which one fits the data best.
 # We test 1,000 different combinations of biological parameters.

@@ -1,5 +1,6 @@
 #%%
 # libraries that we will be using. 
+import os #Attempting to manually path the .csv files 
 import pandas as pd
 import matplotlib.pyplot as plt # another math library
 import numpy as np # we will be using numpy (as np) for numerical operations and applying it to our large data set for analysis.
@@ -7,7 +8,9 @@ import scipy # Scipy is another advance math library that will be useful for cur
 from scipy.optimize import curve_fit # this is the function we will be using to fit our exponential growth curve to the data.
 
 # Loading the data from Release #2 -- loading the data into a pandas dataframe.
-data = pd.read_csv('C:\\Users\\kidus\\OneDrive\\Desktop\\Computational BME\\Module 02\\Module-2-Epidemics-SIR-Modeling\\Data\\mystery_virus_daily_active_counts_RELEASE#2.csv')
+base_dir = os.path.dirname(__file__) # Get the directory of the individual python file 
+path_to_data = os.path.join(base_dir,'..','Data','mystery_virus_daily_active_counts_RELEASE#2.csv') # Create the full path to the CSV file by manually going through user's files
+data = pd.read_csv(path_to_data)  #Calls RELEASE#2
 
 # Why initialize 'days' and 'cases' as separate variables?
 # 1. Accessibility: It is faster to type 'days' than 'data["day"]' repeatedly.
@@ -24,7 +27,7 @@ cases = data['active reported daily cases'].values
 
 # As directed by the class notes, we will be using the SEIR model, which has 4 groups: Susceptible (S), Exposed (E), Infectious (I), and Recovered (R).
 # To intialize and approximate a SEIR model, need to define the parameters: beta (infection rate), sigma (rate of moving from exposed to infectious), gamma (recovery rate), and the initial population counts for each group (S0, E0, I0, R0).
-    # Furthermore, empty arrays are greated to hold the results for S, E, I, and R over days. The first index of each array is set to the initial population counts. 
+    # Furthermore, empty arrays are created to hold the results for S, E, I, and R over days. The first index of each array is set to the initial population counts. 
     # Then, a loop iterates through each day, calculating the change in each group (dS, dE, dI, dR) based on the SEIR equations and updates the counts for the next day using Euler's method. 
     # Finally, the function returns the full history of S, E, I, and R over time.
 
@@ -106,9 +109,10 @@ sse_history = []        # As per pseudocode, we track every error calculation.
     # its parameters are as follows: the start value, the end value, and the number of values to generate. For example, np.linspace(0.01, 0.2, 10) generates 10 values between 0.01 and 0.2 for beta.
 # Citation: https://gemini.google.com/app
 
-beta_range = np.linspace(0.05, 0.15, 50)  # Guided by R0: looking for small beta. R0 = beta / gamma, so if R0 is 0.12 and we want to find a beta that is about 12% of gamma, we can set up a range for beta that is small, such as from 0.05 to 0.15, which allows us to explore values around our estimated R0 while keeping the search focused on biologically plausible parameters. We are also generating 50 values within this range to have a good resolution for our grid search.
-sigma_range = np.linspace(0.1, 0.3, 50)  # Searching for the incubation speed. This range is chosen based on typical values for the incubation period of infectious diseases, which can vary but often falls within a certain range. By setting sigma to vary between 0.1 and 0.3, we are exploring a range of incubation speeds that could be realistic for the mystery virus, allowing us to find the best fit for our model based on the observed data. We are also generating 50 values within this range to have a good resolution for our grid search.
-gamma_range = np.linspace(0.05, 0.5, 50) # Searching for the recovery speed.
+beta_range = np.linspace(0.05, 0.15, 20)  # Guided by R0: looking for small beta. R0 = beta / gamma, so if R0 is 0.12 and we want to find a beta that is about 12% of gamma, we can set up a range for beta that is small, such as from 0.05 to 0.15, which allows us to explore values around our estimated R0 while keeping the search focused on biologically plausible parameters. We are also generating 50 values within this range to have a good resolution for our grid search.
+sigma_range = np.linspace(0.1, 0.3, 20)  # Searching for the incubation speed. This range is chosen based on typical values for the incubation period of infectious diseases, which can vary but often falls within a certain range. By setting sigma to vary between 0.1 and 0.3, we are exploring a range of incubation speeds that could be realistic for the mystery virus, allowing us to find the best fit for our model based on the observed data. We are also generating 50 values within this range to have a good resolution for our grid search.
+gamma_range = np.linspace(0.05, 0.5, 20) # Searching for the recovery speed.
+##FIXED: I reduced the value for beta,sigma, and gramma from 50 to 20. This value will reduce the number of iterations which will speed up the execution.
 
 # Grid search: We will test every combination of beta, sigma, and gamma within our defined ranges to see which one fits the data best.
 # We test 1,000 different combinations of biological parameters.
@@ -196,13 +200,14 @@ print(f"The epidemic is predicted to peak on Day {peak_day} with {int(peak_val)}
 # Load the true data from the CSV file
 
 # Load the True Data -- Ensure the column names match CSV (e.g., 'active reported daily cases' and 'day')
-true_data = pd.read_csv("C:\\Users\\kidus\\OneDrive\\Desktop\\Computational BME\\Module 02\\Module-2-Epidemics-SIR-Modeling\\Data\\mystery_virus_daily_active_counts_RELEASE#3.csv")
+
+data = pd.read_csv(path_to_data) #Calls RELEASE#2
 
 # 3. Find the Actual Peak in the Real Data
 # We look for the maximum value in the actual data column
-actual_peak_val = true_data['active reported daily cases'].max() # gives the true maximum number of active cases reported in the real data from data release #3.
-actual_peak_day_index = true_data['active reported daily cases'].idxmax() # gives the index of the maximum value in the 'active reported daily cases' column, which corresponds to the day of the peak in the real data.
-actual_peak_day = true_data.iloc[actual_peak_day_index]['day']
+actual_peak_val = data['active reported daily cases'].max() # gives the true maximum number of active cases reported in the real data from data release #3.
+actual_peak_day_index = data['active reported daily cases'].idxmax() # gives the index of the maximum value in the 'active reported daily cases' column, which corresponds to the day of the peak in the real data.
+actual_peak_day = data.iloc[actual_peak_day_index]['day']
 
 # 4. Calculate Relative Errors
 # Relative Error for Peak Magnitude (Value)
